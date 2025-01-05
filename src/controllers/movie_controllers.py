@@ -2,6 +2,8 @@ from fastapi import HTTPException, status
 from src.schemas.full_data_request import FullDataRequest
 from src.schemas.partial_data_request import PartialDataRequest
 from src.services.movie_service import MovieService
+from src.utils.webhook_utils import send_to_webhook
+
 
 class MovieController:
 
@@ -24,6 +26,8 @@ class MovieController:
 
             if not movie:
                 raise HTTPException(status_code=404, detail="Movie not found")
+
+            send_to_webhook(movie)
 
             return {
                 "response": movie,
@@ -58,6 +62,8 @@ class MovieController:
                 start_date=movie['release_date'],
                 end_date=movie['release_date']
             )
+
+            send_to_webhook(movie_and_weather_data)
 
             return {
                 "response": movie_and_weather_data,

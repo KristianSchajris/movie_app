@@ -1,7 +1,7 @@
 import json
 import requests
 
-from helpers.load_env.load_env import LoadEnv
+from src.helpers.load_env.load_env import LoadEnv
 
 def send_to_webhook(data: dict):
     """
@@ -16,7 +16,7 @@ def send_to_webhook(data: dict):
         requests.exceptions.RequestException: If there is an issue with the HTTP request.
     """
     webhook_url = LoadEnv("WEBHOOK_URL")
-    response = requests.post(webhook_url.get_value(), json=json(data))
+    response = requests.post(webhook_url.get_value(), json=data)
 
     if response.status_code != 200:
         print("Failed to send data to webhook.")
