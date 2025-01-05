@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{{ title }}</title>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-100">
+
+        <header class="text-center py-10 bg-blue-500 text-white">
+            <h1 class="text-3xl font-bold">{{ title }}</h1>
+        </header>
+
+        <main class="container mx-auto px-4 mt-4">
+            <form id="movie-weather-form" class="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-lg">
+                <fieldset>
+                    <legend class="text-lg font-medium text-gray-900">Search Movie</legend>
+                    {% for field in fields %}
+                    <div class="mt-4">
+                        <label for="{{ field.id }}" class="block text-sm font-medium text-gray-700">{{ field.label }}:</label>
+
+                        <input
+                            type="{{ field.type }}"
+                            id="{{ field.id }}"
+                            name="{{ field.name }}"
+                            placeholder="{{ field.placeholder }}" {% if field.step %} step="{{ field.step }}" {% endif %}
+                            class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                    {% endfor %}
+
+                    <div class="mt-6">
+                        <button type="button" onclick="fetchMovie()" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            Search
+                        </button>
+                    </div>
+                </fieldset>
+            </form>
+
+            <section id="result" class="mt-6 bg-white p-6 rounded-lg shadow-lg">
+                <h3 class="text-xl font-bold text-gray-900">Movie Data:</h3>
+                {% for element in result_elements %}
+                <p id="{{ element.id }}" class="{{ element.class }}"></p>
+                {% endfor %}
+            </section>
+        </main>
+
+        <script type="text/javascript">
+            function displayMovieWeather(data) {
+                    const resultDiv = document.getElementById('result');
+                    resultDiv.classList.remove('hidden');
+                    const response = data.response || {};
+                    const weather = response.release_day_weather || {};
+
+                    document.getElementById('result-title').innerText = `Title: ${response.title || 'N/A'}`;
+                    document.getElementById('result-genres').innerText = `Genres: ${(response.genres || []).join(', ')}`;
+                    document.getElementById('result-release-date').innerText = `Release Date: ${response.release_date || 'N/A'}`;
+                    document.getElementById('result-adult').innerText = `Adult: ${response.adult || 'N/A'}`;
+                    document.getElementById('result-backdrop-path').innerText = `Backdrop Path: ${response.backdrop_path || 'N/A'}`;
+                    document.getElementById('result-original-language').innerText = `Original Language: ${response.original_language || 'N/A'}`;
+                    document.getElementById('result-original-title').innerText = `Original Title: ${response.original_title || 'N/A'}`;
+                    document.getElementById('result-overview').innerText = `Overview: ${response.overview || 'N/A'}`;
+                    document.getElementById('result-popularity').innerText = `Popularity: ${response.popularity || 'N/A'}`;
+                    document.getElementById('result-poster-path').innerText = `Poster Path: ${response.poster_path || 'N/A'}`;
+                    document.getElementById('result-video').innerText = `Video: ${response.video || 'N/A'}`;
+                    document.getElementById('result-vote-average').innerText = `Average Rating: ${response.vote_average || 'N/A'}`;
+                    document.getElementById('result-vote-count').innerText = `Vote Count: ${response.vote_count || 'N/A'}`;
+
+                    if (weather.temperature_max == null || weather.temperature_min == null) {
+                        document.getElementById('result-weather').innerText = weather.message || 'Weather data is unavailable.';
+                    } else {
+                        document.getElementById('result-weather').innerText = `Max Temperature on Release Day: ${weather.temperature_max}°C, Min Temperature on Release Day: ${weather.temperature_min}°C`;
+                    }
+            }
+
+            async function fetchMovie() {
+                const getInputValue = id => document.getElementById(id).value;
+                const fields = {
+                    movie_title: getInputValue('movie-title'),
+                    latitude: parseFloat(getInputValue('latitude')) || null,
+                    longitude: parseFloat(getInputValue('longitude')) || null,
+                    language: getInputValue('language')
+                };
+
+                const url = (fields.latitude && fields.longitude)
+                    ? `http://127.0.0.1:8000/api/v1/movies/get-movie-and-weather-data`
+                    : `http://127.0.0.1:8000/api/v1/movies/search-movie`;
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(fields)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Error fetching weather: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    displayMovieWeather(data);
+                } catch (error) {
+                    const resultDiv = document.getElementById('result');
+                    resultDiv.classList.remove('hidden');
+                    resultDiv.innerHTML = `<p class="text-red-500">${error.message}</p>`;
+                }
+            }
+
+        </script>
+    </body>
+</html>
